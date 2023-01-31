@@ -1281,6 +1281,7 @@ class TCPConnector(BaseConnector):
                 conn._protocol = None
                 conn._transport = None
                 try:
+                    proxy_ip = resp.headers.get("x-luminati-ip", "")
                     if resp.status != 200:
                         message = resp.reason
                         if message is None:
@@ -1322,13 +1323,15 @@ class TCPConnector(BaseConnector):
                         req=req,
                     )
 
-                return await self._start_tls_connection(
+                conn_tuple = await self._start_tls_connection(
                     # Access the old transport for the last time before it's
                     # closed and forgotten forever:
                     transport,
                     req=req,
                     timeout=timeout,
                 )
+                conn_tuple[1].proxy_ip = proxy_ip
+                return conn_tuple
             finally:
                 proxy_resp.close()
 
